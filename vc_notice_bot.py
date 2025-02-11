@@ -1,7 +1,12 @@
+import os
+
 from discord.ext import commands
 import discord
 from datetime import datetime
 
+
+# 環境変数からTOKENを取得
+TOKEN = os.getenv("TOKEN")
 
 intents = discord.Intents.default()
 intents.voice_states = True  # ボイスチャンネルの状態変化を検知する

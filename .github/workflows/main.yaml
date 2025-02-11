@@ -1,0 +1,26 @@
+name: Run bot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11.4"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python script
+        env:
+          TOKEN: ${{ secrets.TOKEN }} # GitHub Secrets から環境変数にセット
+        run: python vc_notice_bot.py
