@@ -78,4 +78,7 @@ jobs:
         with:
           app-name: 'discord-vc-notice-bot'
           slot-name: 'Production'
+          package: .
+          env: |
+            TOKEN=${{ secrets.TOKEN }}
           
