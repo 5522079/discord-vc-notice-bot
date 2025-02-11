@@ -1,11 +1,13 @@
 import os
-
-from discord.ext import commands
-import discord
+from dotenv import load_dotenv
 from datetime import datetime
+
+import discord
+from discord.ext import commands
 
 
 # 環境変数からTOKENを取得
+load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 intents = discord.Intents.default()
