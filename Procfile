@@ -1,0 +1,1 @@
+vc_notice_bot: python vc_notice_bot.py
