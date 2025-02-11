@@ -14,7 +14,7 @@ intents.guilds = True
 intents.members = True  # メンバー管理の権限
 
 bot = commands.Bot(
-    command_prefix="!", 
+    command_prefix="/", 
     intents=intents
 )
 
