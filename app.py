@@ -7,8 +7,9 @@ from discord.ext import commands
 
 
 # 環境変数からTOKENを取得
-load_dotenv()
-TOKEN = os.getenv("TOKEN")
+# load_dotenv()
+# TOKEN = os.getenv("TOKEN")
+TOKEN = "MTMzODE5OTIwNTE4OTI1OTM4NQ.GnAty6.prrVSYZNL89JbOZtkWcXzY74ifmARsNmU4sqWY"
 
 intents = discord.Intents.default()
 intents.voice_states = True  # ボイスチャンネルの状態変化を検知する
