@@ -9,7 +9,7 @@ const bot = createBot({
   intents: Intents.Guilds | Intents.GuildMembers | Intents.GuildVoiceStates,
   events: {
     ready: async (bot, payload) => {
-      console.log(`${payload.user.username} is ready!`);
+      console.log(`✅ Bot is online!`);
       // ボットのステータスを設定
       editBotStatus(bot, {
         status: "online",
@@ -23,8 +23,6 @@ const bot = createBot({
     },
 
     voiceStateUpdate: async (bot, before, after) => {
-      console.log(`Before: ${before?.channelId ?? "None"}`);
-      console.log(`After: ${after?.channelId ?? "None"}`);
 
       const userId = after?.userId || before?.userId;
       const guildId = after?.guildId || before?.guildId;
@@ -35,10 +33,8 @@ const bot = createBot({
           voiceStateCache.add(userId);
           
           if (voiceStateCache.size === 1) {
-            console.log(`最初の一人がVCに参加 (通知送信)`);
+            // 最初の一人がVCに参加とき通知を送信
             await sendVoiceJoinNotification(bot, guildId, before.channelId, userId);
-          } else {
-            console.log(`VCに参加`);
           }
         }
       }
@@ -47,11 +43,10 @@ const bot = createBot({
       if (!before?.channelId && !after?.channelId) {
         if (voiceStateCache.has(userId)) {
           voiceStateCache.delete(userId);
-          console.log(`VCを退出`);
         }
 
         if (voiceStateCache.size === 0) {
-          console.log("最後の一人がVCを退出（キャッシュクリア）");
+          // 最後の一人がVCを退出したらすべてのキャッシュをクリア
           voiceStateCache.clear();
         }
       }
@@ -108,5 +103,5 @@ await startBot(bot);
 
 // ボットの常時起動
 Deno.cron("Continuous Request", "*/3 * * * *", () => {
-    console.log("Still here...");
+    console.log("🔄 Bot is active!");
 });
