@@ -100,10 +100,10 @@ async function getNonBotMembers(bot: Bot, guildId: bigint) {
   return Array.from(members.values()).filter(member => !botRole || !member.roles.includes(botRole.id));
 }
 
-// ボットを起動
-await startBot(bot);
-
 // ボットの常時起動
 Deno.cron("Continuous Request", "*/3 * * * *", () => {
     console.log("🔄 Bot is active!");
 });
+
+// ボットを起動
+await startBot(bot);
