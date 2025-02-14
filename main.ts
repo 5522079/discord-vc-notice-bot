@@ -35,6 +35,8 @@ const bot = createBot({
           if (voiceStateCache.size === 1) {
             // 最初の一人がVCに参加とき通知を送信
             await sendVoiceJoinNotification(bot, guildId, before.channelId, userId);
+          } else {
+
           }
         }
       }
