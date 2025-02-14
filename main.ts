@@ -3,12 +3,6 @@ import "$std/dotenv/load.ts";
 
 const token = Deno.env.get("TOKEN");
 
-if (!token) {
-  console.error("Error: DISCORD_BOT_TOKEN is undefined!");
-} else {
-  console.log("Bot Token (partially hidden):", token.slice(0, 5) + "...");
-}
-
 const bot = createBot({
   token,
   botId: BigInt(getBotIdFromToken(token)),
@@ -111,3 +105,8 @@ async function getNonBotMembers(bot: Bot, guildId: bigint) {
 
 // ボットを起動
 await startBot(bot);
+
+// ボットの常時起動
+Deno.cron("Continuous Request", "*/3 * * * *", () => {
+    console.log("Still here...");
+});
