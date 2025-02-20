@@ -29,12 +29,12 @@ const bot = createBot({
 
       // VC参加時の処理
       if (before?.channelId) {
-        if (!voiceStateCache.has(userId)) {
-          voiceStateCache.add(userId);
+        if (!vcMemberCache.has(userId)) {
+          vcMemberCache.add(userId);
           
-          if (voiceStateCache.size === 1) {
+          if (vcMemberCache.size === 1) {
             // 最初の一人がVCに参加とき通知を送信
-            await sendVoiceJoinNotification(bot, guildId, before.channelId, userId);
+            await sendNotification(bot, guildId, before.channelId, userId);
           } else {
 
           }
@@ -43,13 +43,13 @@ const bot = createBot({
 
       // VC退出時の処理
       if (!before?.channelId && !after?.channelId) {
-        if (voiceStateCache.has(userId)) {
-          voiceStateCache.delete(userId);
+        if (vcMemberCache.has(userId)) {
+          vcMemberCache.delete(userId);
         }
 
-        if (voiceStateCache.size === 0) {
+        if (vcMemberCache.size === 0) {
           // 最後の一人がVCを退出したらすべてのキャッシュをクリア
-          voiceStateCache.clear();
+          vcMemberCache.clear();
         }
       }
     },
@@ -57,11 +57,11 @@ const bot = createBot({
 });
 
 // VCの参加メンバーをキャッシュ
-const voiceStateCache = new Set<bigint>();
+const vcMemberCache = new Set<bigint>();
 
 // VC通知を送る関数
-async function sendVoiceJoinNotification(bot: Bot, guildId: bigint, voiceChannel: bigint, userId: bigint) {
-  const voiceChannelName = await bot.helpers.getChannel(voiceChannel);
+async function sendNotification(bot: Bot, guildId: bigint, voiceChannelId: bigint, userId: bigint) {
+  const voiceChannel = await bot.helpers.getChannel(voiceChannelId);
   const member = await bot.helpers.getMember(guildId, userId).catch(() => null);
   const username = member?.nick || member?.user.username;
 
@@ -76,13 +76,13 @@ async function sendVoiceJoinNotification(bot: Bot, guildId: bigint, voiceChannel
   const channels = await bot.helpers.getChannels(guildId);
   const notifyChannel = channels.find(c => c.name === "通知"); //"通知"チャンネルを指定
 
-  const invite = await createInvite(bot, voiceChannel, { maxUses: 1 });
+  const invite = await createInvite(bot, voiceChannelId, { maxUses: 1 });
 
   if (notifyChannel) {
     await bot.helpers.sendMessage(notifyChannel.id, {
       content: `${username} がVCを開始しました`,
       embeds: [{
-        description: `**[${voiceChannelName.name}](https://discord.gg/${invite.code})に参加する \n ${mentions}**`,
+        description: `**[${voiceChannel.name}](https://discord.gg/${invite.code})に参加する \n ${mentions}**`,
         color: 0x5865F2,
         thumbnail: avatarUrl ? { url: avatarUrl } : undefined,
         timestamp: new Date().toISOString(),
