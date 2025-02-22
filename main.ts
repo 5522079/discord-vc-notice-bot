@@ -104,10 +104,10 @@ async function getNonBotMembers(bot: Bot, guildId: bigint) {
 }
 
 // ボットの常時起動
-//Deno.cron("Continuous Request", "*/2 * * * *", () => {
-//    console.log(`🔎 ${vcMemberCache.size} members are in the VC`);
-//    console.log("🔄 Bot is active!");
-//});
+Deno.cron("Continuous Request", "*/2 * * * *", () => {
+    console.log(`🔎 ${vcMemberCache.size} members are in the VC`);
+    console.log("🔄 Bot is active!");
+});
 
 // ボットを起動
 try {
