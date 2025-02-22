@@ -9,17 +9,16 @@ const bot = createBot({
   intents: Intents.Guilds | Intents.GuildMembers | Intents.GuildVoiceStates,
   events: {
     ready: async (bot, payload) => {
-      console.log(`✅ Bot is online!`);
-      // ボットのステータスを設定
-      editBotStatus(bot, {
-        status: "online",
-        activities: [
-          {
-            name: "αテスト",
-            type: 1,
-          },
-        ],
-      });
+      console.log("✅ Bot is online!");
+      console.log(`🔎 ${vcMemberCache.size} members are in the VC`);
+      try {
+        await editBotStatus(bot, {
+          status: "online",
+          activities: [{ name: "αテスト", type: 1 }], // ボットのステータスを設定
+        });
+      } catch (error) {
+        console.error("❌ Bot startup error!:", error);
+      }
     },
 
     voiceStateUpdate: async (bot, before, after) => {
@@ -31,7 +30,9 @@ const bot = createBot({
       if (before?.channelId) {
         if (!vcMemberCache.has(userId)) {
           vcMemberCache.add(userId);
-          
+
+          console.log(`🔥 ${"*".repeat(2) + userId.toString().slice(16)} joined the ${"*".repeat(2) + before.channelId.toString().slice(16)}`);
+
           if (vcMemberCache.size === 1) {
             // 最初の一人がVCに参加とき通知を送信
             await sendNotification(bot, guildId, before.channelId, userId);
@@ -44,10 +45,12 @@ const bot = createBot({
       // VC退出時の処理
       if (!before?.channelId && !after?.channelId) {
         if (vcMemberCache.has(userId)) {
+          console.log(`🔥 ${"*".repeat(2) + userId.toString().slice(16)} exits`);
           vcMemberCache.delete(userId);
         }
 
         if (vcMemberCache.size === 0) {
+          console.log(`🧹 Clear cache`);
           // 最後の一人がVCを退出したらすべてのキャッシュをクリア
           vcMemberCache.clear();
         }
@@ -57,7 +60,7 @@ const bot = createBot({
 });
 
 // VCの参加メンバーをキャッシュ
-const vcMemberCache = new Set<bigint>();
+let vcMemberCache = new Set<bigint>();
 
 // VC通知を送る関数
 async function sendNotification(bot: Bot, guildId: bigint, voiceChannelId: bigint, userId: bigint) {
@@ -101,9 +104,14 @@ async function getNonBotMembers(bot: Bot, guildId: bigint) {
 }
 
 // ボットの常時起動
-Deno.cron("Continuous Request", "*/3 * * * *", () => {
-    console.log("🔄 Bot is active!");
-});
+//Deno.cron("Continuous Request", "*/2 * * * *", () => {
+//    console.log(`🔎 ${vcMemberCache.size} members are in the VC`);
+//    console.log("🔄 Bot is active!");
+//});
 
 // ボットを起動
-await startBot(bot);
+try {
+  await startBot(bot);
+} catch (error) {
+  console.error("❌ Bot startup error!:", error);
+}
