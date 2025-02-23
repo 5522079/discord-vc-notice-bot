@@ -2,6 +2,8 @@ import { Bot, createBot, startBot, getBotIdFromToken, Intents, createInvite, edi
 import "$std/dotenv/load.ts";
 
 const token = Deno.env.get("TOKEN");
+const guildId = Deno.env.get("GUILD_ID");
+const adminId = Deno.env.get("ADMIN_ID");
 
 const bot = createBot({
   token,
@@ -10,7 +12,25 @@ const bot = createBot({
   events: {
     ready: async (bot, payload) => {
       console.log("✅ Bot is online!");
-      console.log(`🔎 ${vcMemberCache.size} members are in the VC`);
+      
+      const channels = await bot.helpers.getChannels(guildId);
+      const notifyChannel = channels.find(c => c.name === "通知");
+
+      const message = await bot.helpers.sendMessage(notifyChannel.id, {
+      embeds: [{
+          title: "Server down",
+          description: `<@${adminId}> An error occurred on the **gcp-us-east4 server** and the bot restarted. It is now functioning normally.`,
+          thumbnail: { url: "https://i.ibb.co/1YtSvjB4/error.png"},
+          color: 0xEC0000,
+          footer: { text: "※This message will be deleted automatically after 30 minutes." },
+          }],
+      });
+
+      // 30分後に削除
+      setTimeout(() => {
+          bot.helpers.deleteMessage(notifyChannel.id, message.id).catch(console.error);
+      }, 1800000);
+
       try {
         await editBotStatus(bot, {
           status: "online",
@@ -22,9 +42,7 @@ const bot = createBot({
     },
 
     voiceStateUpdate: async (bot, before, after) => {
-
       const userId = after?.userId || before?.userId;
-      const guildId = after?.guildId || before?.guildId;
 
       // VC参加時の処理
       if (before?.channelId) {
@@ -105,7 +123,6 @@ async function getNonBotMembers(bot: Bot, guildId: bigint) {
 
 // ボットの常時起動
 Deno.cron("Continuous Request", "*/2 * * * *", () => {
-    console.log(`🔎 ${vcMemberCache.size} members are in the VC`);
     console.log("🔄 Bot is active!");
 });
 
