@@ -2,8 +2,6 @@ import { Bot, createBot, startBot, getBotIdFromToken, Intents, createInvite, edi
 import "$std/dotenv/load.ts";
 
 const token = Deno.env.get("TOKEN");
-const guildId = Deno.env.get("GUILD_ID");
-const adminId = Deno.env.get("ADMIN_ID");
 
 const bot = createBot({
   token,
@@ -12,50 +10,29 @@ const bot = createBot({
   events: {
     ready: async (bot, payload) => {
       console.log("✅ Bot is online!");
-      
-      const channels = await bot.helpers.getChannels(guildId);
-      const notifyChannel = channels.find(c => c.name === "通知");
 
-      const message = await bot.helpers.sendMessage(notifyChannel.id, {
-      embeds: [{
-          title: "Server down",
-          description: `<@${adminId}> An error occurred on the **gcp-us-east4 server** and the bot restarted. It is now functioning normally.`,
-          thumbnail: { url: "https://i.ibb.co/1YtSvjB4/error.png"},
-          color: 0xEC0000,
-          footer: { text: "※This message will be deleted automatically after 30 minutes." },
-          }],
+      await editBotStatus(bot, {
+        status: "online",
+        activities: [{ name: "αテスト", type: 1 }], // ボットのステータスを設定
       });
-
-      // 30分後に削除
-      setTimeout(() => {
-          bot.helpers.deleteMessage(notifyChannel.id, message.id).catch(console.error);
-      }, 1800000);
-
-      try {
-        await editBotStatus(bot, {
-          status: "online",
-          activities: [{ name: "αテスト", type: 1 }], // ボットのステータスを設定
-        });
-      } catch (error) {
-        console.error("❌ Bot startup error!:", error);
-      }
     },
 
     voiceStateUpdate: async (bot, before, after) => {
       const userId = after?.userId || before?.userId;
+      const guildId = after?.guildId || before?.guildId;
+
+      const isEmptyEntry = await kv.get(["vc", "isEmpty"]);
+      const isEmpty = isEmptyEntry.value ?? true;
 
       // VC参加時の処理
       if (before?.channelId) {
         if (!vcMemberCache.has(userId)) {
+          console.log(`🔥 ${"*".repeat(2) + userId.toString().slice(16)} joined`);
           vcMemberCache.add(userId);
-
-          console.log(`🔥 ${"*".repeat(2) + userId.toString().slice(16)} joined the ${"*".repeat(2) + before.channelId.toString().slice(16)}`);
-
-          if (vcMemberCache.size === 1) {
+          if (isEmpty) {
             // 最初の一人がVCに参加とき通知を送信
             await sendNotification(bot, guildId, before.channelId, userId);
-          } else {
-
+            await updateKV(false);
           }
         }
       }
@@ -71,14 +48,21 @@ const bot = createBot({
           console.log(`🧹 Clear cache`);
           // 最後の一人がVCを退出したらすべてのキャッシュをクリア
           vcMemberCache.clear();
+          await updateKV(true);
         }
       }
     },
   },
 });
 
-// VCの参加メンバーをキャッシュ
 let vcMemberCache = new Set<bigint>();
+const kv = await Deno.openKv();
+
+// Deno KV に isEmpty の値を更新する関数
+async function updateKV(isEmpty: boolean) {
+  await kv.set(["vc", "isEmpty"], isEmpty);
+  console.log(`🛸 Updated KV: isEmpty = ${isEmpty}`);
+}
 
 // VC通知を送る関数
 async function sendNotification(bot: Bot, guildId: bigint, voiceChannelId: bigint, userId: bigint) {
